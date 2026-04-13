@@ -44,7 +44,7 @@ export default function Chatbot() {
     setInput("");
 
     try {
-      const response = await fetch("http://localhost:5000/chat", {
+      const response = await fetch("https://kmclu-university-website-chatbot.onrender.com/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

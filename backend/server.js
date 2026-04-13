@@ -10,8 +10,16 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST"],
+  })
+);
+
+
+// app.use(cors());
+// app.use(express.json());
 
 // MongoDB Connect
 mongoose
