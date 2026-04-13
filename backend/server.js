@@ -1,83 +1,91 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-require('dotenv').config();
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+require("dotenv").config();
+
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("✅ Chatbot Server Connected to MongoDB"))
-    .catch(err => console.error("❌ MongoDB Connection Error:", err));
-
-const UniversityData = mongoose.model('UniversityData', new mongoose.Schema({
-    source: String,
-    content: String,
-    embedding: [Number],
-}));
+const UniversityData = require("./models/UniversityData");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// --- Helper: Manual Embedding Fetch (To bypass SDK 404 Bug) ---
-async function getEmbedding(text) {
-    const url = `https://generativelanguage.googleapis.com/v1/models/text-embedding-004:embedContent?key=${process.env.GEMINI_API_KEY}`;
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            model: "models/text-embedding-004",
-            content: { parts: [{ text: text }] }
-        })
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error.message);
-    return data.embedding.values;
-}
+const app = express();
 
-function dotProduct(a, b) {
-    return a.map((x, i) => a[i] * (b[i] || 0)).reduce((m, n) => m + n, 0);
-}
+app.use(cors());
+app.use(express.json());
 
-app.post('/chat', async (req, res) => {
-    try {
-        const { message } = req.body;
+// MongoDB Connect
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ Connected to MongoDB"))
+  .catch((err) => console.log("❌ MongoDB Error:", err));
 
-        // 1. Get Embedding using Manual Fetch (v1 force)
-        const userEmbedding = await getEmbedding(message);
-
-        const allData = await UniversityData.find({});
-        if (allData.length === 0) return res.json({ reply: "Database khali hai!" });
-
-        // 2. Vector Search Logic
-        let bestMatch = allData[0];
-        let maxSimilarity = -Infinity;
-
-        allData.forEach((doc) => {
-            if (doc.embedding && doc.embedding.length === userEmbedding.length) {
-                const similarity = dotProduct(userEmbedding, doc.embedding);
-                if (similarity > maxSimilarity) {
-                    maxSimilarity = similarity;
-                    bestMatch = doc;
-                }
-            }
-        });
-
-        // 3. Generate Answer
-        const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const prompt = `Aap KMCLU University ke AI assistant hain. 
-        Context: ${bestMatch.content}
-        Sawal: ${message}`;
-
-        const result = await chatModel.generateContent(prompt);
-        res.json({ reply: result.response.text() });
-
-    } catch (error) {
-        console.error("❌ Error Detail:", error.message);
-        res.status(500).json({ reply: "Bhai, server error! Terminal dekho." });
-    }
+// Test Route
+app.get("/", (req, res) => {
+  res.send("KMCLU Chatbot Backend Running...");
 });
 
-const PORT = 5000;
-app.listen(PORT, () => console.log(`🚀 Final Fix Server: http://localhost:${PORT}`));
+// Chat Route
+app.post("/chat", async (req, res) => {
+  try {
+    const message = req.body.message.toLowerCase();
+
+    // MongoDB me search karo
+    const result = await UniversityData.findOne({
+      question: { $regex: message, $options: "i" },
+    });
+
+    // Agar MongoDB me mil gaya
+    if (result) {
+      return res.json({ reply: result.answer });
+    }
+
+    // Gemini model
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-flash",
+    });
+
+    const prompt = `
+You are KMCLU University Helpdesk Bot.
+
+Only answer questions related to KMCLU University such as:
+- admission
+- fee
+- courses
+- hostel
+- scholarship
+- exam
+- library
+- contact
+
+Student Question: ${message}
+
+Give a short, simple and helpful answer.
+If the question is not related to KMCLU University, reply:
+"Please ask KMCLU related questions only."
+`;
+
+    try {
+      const response = await model.generateContent(prompt);
+      const reply = response.response.text();
+
+      return res.json({ reply });
+    } catch (geminiError) {
+      console.log("Gemini Error:", geminiError.message);
+
+      return res.json({
+        reply:
+          "Sorry, AI service is not available right now. Please try Admission, Exam, Fee, Contact, Courses, Hostel, Library or Scholarship.",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      reply: "Server Error",
+    });
+  }
+});
+
+app.listen(5000, () => {
+  console.log("🚀 Server running on http://localhost:5000");
+});
