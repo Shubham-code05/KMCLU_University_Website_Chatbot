@@ -6,10 +6,9 @@ require("dotenv").config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const UniversityData = require("./models/UniversityData");
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
 const app = express();
 
+// Middleware
 app.use(
   cors({
     origin: "*",
@@ -17,9 +16,10 @@ app.use(
   })
 );
 
+app.use(express.json()); // ye bahut important hai
 
-// app.use(cors());
-// app.use(express.json());
+// Gemini
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // MongoDB Connect
 mongoose
@@ -35,14 +35,24 @@ app.get("/", (req, res) => {
 // Chat Route
 app.post("/chat", async (req, res) => {
   try {
-    const message = req.body.message.toLowerCase();
+    console.log("Request Body:", req.body);
 
-    // MongoDB me search karo
+    const message = req.body?.message;
+
+    if (!message) {
+      return res.status(400).json({
+        reply: "No message received",
+      });
+    }
+
+    const lowerMessage = message.toLowerCase();
+
+    // MongoDB search
     const result = await UniversityData.findOne({
-      question: { $regex: message, $options: "i" },
+      question: { $regex: lowerMessage, $options: "i" },
     });
 
-    // Agar MongoDB me mil gaya
+    // Agar MongoDB me answer mil gaya
     if (result) {
       return res.json({ reply: result.answer });
     }
@@ -65,7 +75,7 @@ Only answer questions related to KMCLU University such as:
 - library
 - contact
 
-Student Question: ${message}
+Student Question: ${lowerMessage}
 
 Give a short, simple and helpful answer.
 If the question is not related to KMCLU University, reply:
@@ -78,7 +88,7 @@ If the question is not related to KMCLU University, reply:
 
       return res.json({ reply });
     } catch (geminiError) {
-      console.log("Gemini Error:", geminiError.message);
+      console.log("❌ Gemini Error:", geminiError.message);
 
       return res.json({
         reply:
@@ -86,14 +96,16 @@ If the question is not related to KMCLU University, reply:
       });
     }
   } catch (error) {
-    console.log(error);
+    console.log("❌ Server Error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       reply: "Server Error",
     });
   }
 });
 
-app.listen(5000, () => {
-  console.log("🚀 Server running on http://localhost:5000");
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
