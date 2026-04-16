@@ -23,11 +23,13 @@ mongoose
       },
       {
         question: "fee",
-        answer: "KMCLU fee structure is available in the Fee section.",
+        answer:
+          "KMCLU fee structure is available in the Fee section.",
       },
       {
         question: "contact",
-        answer: "You can contact KMCLU at reg@kmclu.ac.in",
+        answer:
+          "You can contact KMCLU at reg@kmclu.ac.in",
       },
       {
         question: "courses",
@@ -36,7 +38,13 @@ mongoose
       },
       {
         question: "hostel",
-        answer: "KMCLU provides hostel facilities for boys and girls.",
+        answer:
+          "KMCLU provides hostel facilities for boys and girls.",
+      },
+      {
+        question: "hostel fee",
+        answer:
+          "KMCLU provides hostel facilities for boys and girls. Hostel fee can be confirmed from the administration office.",
       },
       {
         question: "library",
@@ -48,6 +56,41 @@ mongoose
         answer:
           "Scholarship details are available in the student welfare section.",
       },
+      {
+        question: "bca fee",
+        answer:
+          "BCA fee details are available on the KMCLU courses page.",
+      },
+      {
+        question: "btech admission",
+        answer:
+          "B.Tech admission is based on eligibility and university process.",
+      },
+      {
+        question: "contact number",
+        answer:
+          "KMCLU Contact Number: +91-551-2205577",
+      },
+      {
+        question: "mba fee",
+        answer:
+          "MBA fee details are available from the KMCLU admission office and courses page.",
+      },
+      {
+        question: "mca fee",
+        answer:
+          "MCA fee details are available on the KMCLU courses page.",
+      },
+      {
+        question: "result",
+        answer:
+          "KMCLU results and notices are available in the Notice section of the official website.",
+      },
+      {
+        question: "admit card",
+        answer:
+          "KMCLU admit card and exam related notices are available in the Notice section.",
+      }
     ]);
 
     console.log("✅ Data Inserted Successfully");
