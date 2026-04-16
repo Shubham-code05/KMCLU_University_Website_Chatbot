@@ -36,8 +36,6 @@ app.get("/", (req, res) => {
 // Chat Route
 app.post("/chat", async (req, res) => {
   try {
-    console.log("📩 Request Body:", req.body);
-
     const message = req.body?.message;
 
     if (!message || message.trim() === "") {
@@ -48,63 +46,107 @@ app.post("/chat", async (req, res) => {
 
     const lowerMessage = message.toLowerCase().trim();
 
+    // Smart matching
+    let searchText = lowerMessage;
+
+    if (
+      lowerMessage.includes("bca") &&
+      (lowerMessage.includes("fee") || lowerMessage.includes("fees"))
+    ) {
+      searchText = "bca fee";
+    } else if (
+      lowerMessage.includes("mba") &&
+      (lowerMessage.includes("admission") || lowerMessage.includes("apply"))
+    ) {
+      searchText = "mba admission";
+    } else if (
+      lowerMessage.includes("btech") &&
+      lowerMessage.includes("admission")
+    ) {
+      searchText = "btech admission";
+    } else if (
+      lowerMessage.includes("hostel") &&
+      lowerMessage.includes("fee")
+    ) {
+      searchText = "hostel fee";
+    } else if (
+      lowerMessage.includes("contact") &&
+      lowerMessage.includes("number")
+    ) {
+      searchText = "contact number";
+    } else if (
+      lowerMessage.includes("library") &&
+      lowerMessage.includes("timing")
+    ) {
+      searchText = "library timing";
+    } else if (
+      lowerMessage.includes("hostel")
+    ) {
+      searchText = "hostel";
+    } else if (
+      lowerMessage.includes("result")
+    ) {
+      searchText = "result";
+    } else if (
+      lowerMessage.includes("admit")
+    ) {
+      searchText = "admit card";
+    }
+
     // MongoDB Search
     const result = await UniversityData.findOne({
-      question: { $regex: lowerMessage, $options: "i" },
+      question: { $regex: searchText, $options: "i" },
     });
 
-    // Agar MongoDB me mil gaya
     if (result) {
       let finalReply = result.answer;
 
-      if (lowerMessage.includes("admission")) {
+      // Add useful links automatically
+      if (
+        searchText.includes("admission") ||
+        searchText.includes("apply")
+      ) {
         finalReply +=
           "\n\n🔗 Admission Link: https://www.kmclu.ac.in/admission/";
       }
 
       if (
-        lowerMessage.includes("exam") ||
-        lowerMessage.includes("result") ||
-        lowerMessage.includes("notice") ||
-        lowerMessage.includes("admit") ||
-        lowerMessage.includes("time table")
+        searchText.includes("exam") ||
+        searchText.includes("result") ||
+        searchText.includes("notice") ||
+        searchText.includes("admit")
       ) {
         finalReply +=
-          "\n\n🔗 Exam / Notice Link: https://www.kmclu.ac.in/category/notice/";
-      }
-
-      if (lowerMessage.includes("contact")) {
-        finalReply +=
-          "\n\n🔗 Contact Link: https://www.kmclu.ac.in/contact-us/";
+          "\n\n🔗 Notice Link: https://www.kmclu.ac.in/category/notice/";
       }
 
       if (
-        lowerMessage.includes("course") ||
-        lowerMessage.includes("bca") ||
-        lowerMessage.includes("bsc") ||
-        lowerMessage.includes("ba")
+        searchText.includes("course") ||
+        searchText.includes("bca") ||
+        searchText.includes("mba fee") ||
+        searchText.includes("mca fee")
       ) {
         finalReply +=
           "\n\n🔗 Courses Link: https://www.kmclu.ac.in/courses/";
       }
 
+      if (searchText.includes("contact")) {
+        finalReply +=
+          "\n\n🔗 Contact Link: https://www.kmclu.ac.in/contact-us/";
+      }
+
       return res.json({ reply: finalReply });
     }
 
-    // Greeting handle
-    if (
-      lowerMessage === "hi" ||
-      lowerMessage === "hello" ||
-      lowerMessage === "hlo" ||
-      lowerMessage === "hey"
-    ) {
+    // Greetings
+    if (["hi", "hello", "hlo", "hey"].includes(lowerMessage)) {
       return res.json({
         reply:
           "👋 Welcome to KMCLU Helpdesk Bot.\n\nYou can ask me about:\n• Admission\n• Courses\n• Fee\n• Hostel\n• Scholarship\n• Exam\n• Library\n• Contact",
       });
     }
 
-    // Gemini model
+    // Gemini fallback
     const model = genAI.getGenerativeModel({
       model: "gemini-2.0-flash",
     });
@@ -112,73 +154,31 @@ app.post("/chat", async (req, res) => {
     const prompt = `
 You are KMCLU University Helpdesk Bot.
 
-You must answer ONLY questions related to KMCLU University.
+Answer ONLY questions related to KMCLU University.
 
-Important information:
-- Official Website: https://www.kmclu.ac.in/
-- Admission Page: https://www.kmclu.ac.in/admission/
-- Contact Page: https://www.kmclu.ac.in/contact-us/
-- Courses Page: https://www.kmclu.ac.in/courses/
-- Exam / Notice Page: https://www.kmclu.ac.in/category/notice/
+Official Website: https://www.kmclu.ac.in/
 
-Rules:
-1. Answer only about KMCLU University.
-2. Give detailed but simple answers.
-3. Use bullet points if needed.
-4. If the user asks about admission, include the admission link.
-5. If the user asks about exam, result, notice, timetable or admit card, include the exam link.
-6. If the user asks about courses, include the courses link.
-7. If the user asks about contact, include the contact link.
-8. If the question is not related to KMCLU, say:
+If the question is about:
+- admission → include https://www.kmclu.ac.in/admission/
+- contact → include https://www.kmclu.ac.in/contact-us/
+- courses or fees → include https://www.kmclu.ac.in/courses/
+- result, exam, admit card or notice → include https://www.kmclu.ac.in/category/notice/
+
+If the question is not related to KMCLU, reply:
 "Please ask only KMCLU University related questions."
 
-Student Question: ${lowerMessage}
+Question: ${lowerMessage}
 `;
 
     try {
       const response = await model.generateContent(prompt);
       const reply = response.response.text();
 
-      let finalReply = reply;
-
-      if (lowerMessage.includes("admission")) {
-        finalReply +=
-          "\n\n🔗 Admission Link: https://www.kmclu.ac.in/admission/";
-      }
-
-      if (
-        lowerMessage.includes("exam") ||
-        lowerMessage.includes("result") ||
-        lowerMessage.includes("notice") ||
-        lowerMessage.includes("admit") ||
-        lowerMessage.includes("time table")
-      ) {
-        finalReply +=
-          "\n\n🔗 Exam / Notice Link: https://www.kmclu.ac.in/category/notice/";
-      }
-
-      if (lowerMessage.includes("contact")) {
-        finalReply +=
-          "\n\n🔗 Contact Link: https://www.kmclu.ac.in/contact-us/";
-      }
-
-      if (
-        lowerMessage.includes("course") ||
-        lowerMessage.includes("bca") ||
-        lowerMessage.includes("bsc") ||
-        lowerMessage.includes("ba")
-      ) {
-        finalReply +=
-          "\n\n🔗 Courses Link: https://www.kmclu.ac.in/courses/";
-      }
-
-      return res.json({ reply: finalReply });
-    } catch (geminiError) {
-      console.log("❌ Gemini Error:", geminiError);
-
+      return res.json({ reply });
+    } catch (err) {
       return res.json({
         reply:
-          "Sorry, AI service is not available right now.\n\nYou can still ask about:\n• Admission\n• Exam\n• Fee\n• Contact\n• Courses\n• Hostel\n• Library\n• Scholarship",
+          "Sorry, AI service is not available right now. Please ask about Admission, Courses, Fee, Hostel, Exam or Contact.",
       });
     }
   } catch (error) {
