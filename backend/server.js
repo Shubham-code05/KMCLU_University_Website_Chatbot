@@ -79,17 +79,11 @@ app.post("/chat", async (req, res) => {
       lowerMessage.includes("timing")
     ) {
       searchText = "library timing";
-    } else if (
-      lowerMessage.includes("hostel")
-    ) {
+    } else if (lowerMessage.includes("hostel")) {
       searchText = "hostel";
-    } else if (
-      lowerMessage.includes("result")
-    ) {
+    } else if (lowerMessage.includes("result")) {
       searchText = "result";
-    } else if (
-      lowerMessage.includes("admit")
-    ) {
+    } else if (lowerMessage.includes("admit")) {
       searchText = "admit card";
     }
 
@@ -98,44 +92,11 @@ app.post("/chat", async (req, res) => {
       question: { $regex: searchText, $options: "i" },
     });
 
+    // Agar DB me answer mil gaya to wahi return karo
     if (result) {
-      let finalReply = result.answer;
-
-      // Add useful links automatically
-      if (
-        searchText.includes("admission") ||
-        searchText.includes("apply")
-      ) {
-        finalReply +=
-          "\n\n🔗 Admission Link: https://www.kmclu.ac.in/admission/";
-      }
-
-      if (
-        searchText.includes("exam") ||
-        searchText.includes("result") ||
-        searchText.includes("notice") ||
-        searchText.includes("admit")
-      ) {
-        finalReply +=
-          "\n\n🔗 Notice Link: https://www.kmclu.ac.in/category/notice/";
-      }
-
-      if (
-        searchText.includes("course") ||
-        searchText.includes("bca") ||
-        searchText.includes("mba fee") ||
-        searchText.includes("mca fee")
-      ) {
-        finalReply +=
-          "\n\n🔗 Courses Link: https://www.kmclu.ac.in/courses/";
-      }
-
-      if (searchText.includes("contact")) {
-        finalReply +=
-          "\n\n🔗 Contact Link: https://www.kmclu.ac.in/contact-us/";
-      }
-
-      return res.json({ reply: finalReply });
+      return res.json({
+        reply: result.answer,
+      });
     }
 
     // Greetings
@@ -157,12 +118,6 @@ You are KMCLU University Helpdesk Bot.
 Answer ONLY questions related to KMCLU University.
 
 Official Website: https://www.kmclu.ac.in/
-
-If the question is about:
-- admission → include https://www.kmclu.ac.in/admission/
-- contact → include https://www.kmclu.ac.in/contact-us/
-- courses or fees → include https://www.kmclu.ac.in/courses/
-- result, exam, admit card or notice → include https://www.kmclu.ac.in/category/notice/
 
 If the question is not related to KMCLU, reply:
 "Please ask only KMCLU University related questions."
