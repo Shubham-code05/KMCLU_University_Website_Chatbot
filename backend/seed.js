@@ -24,7 +24,17 @@ mongoose
       {
         question: "fee",
         answer:
-          "KMCLU fee structure is available in the Fee section.",
+          "KMCLU fee structure is available for all courses such as BCA, B.Tech, MBA, MCA, BBA and BA.",
+      },
+      {
+        question: "fee structure",
+        answer:
+          "BCA: ₹32,850/year\nB.Tech: ₹83,300/year\nBBA: ₹43,050/year\nMBA: ₹57,400/year\nMCA: ₹81,250/year\nBA: ₹12,050/year\nB.Com: ₹14,050/year",
+      },
+      {
+        question: "all course fee",
+        answer:
+          "BCA: ₹32,850/year\nB.Tech: ₹83,300/year\nBBA: ₹43,050/year\nMBA Regular: ₹57,400/year\nMBA Self Finance: ₹81,250/year\nMCA: ₹81,250/year\nBA: ₹12,050 - ₹14,850/year\nB.Com: ₹14,050 - ₹30,150/year\nB.Sc Hons: ₹35,050/year\nB.Ed: ₹53,150/year\nB.Pharma: ₹84,250/year",
       },
       {
         question: "contact",
@@ -39,22 +49,42 @@ mongoose
       {
         question: "courses",
         answer:
-          "KMCLU offers BA, BCA, B.Tech, MBA, MCA and language courses.",
+          "KMCLU offers BA, BCA, B.Tech, MBA, MCA, BBA, B.Com and language courses.",
       },
       {
         question: "bca fee",
         answer:
-          "BCA fee details are available on the KMCLU courses page.",
+          "KMCLU BCA regular course ki annual fee ₹32,850 hai.",
+      },
+      {
+        question: "btech fee",
+        answer:
+          "KMCLU B.Tech ki annual fee ₹83,300 hai.",
       },
       {
         question: "mba fee",
         answer:
-          "MBA fee details are available from the KMCLU courses page.",
+          "KMCLU MBA Regular ki annual fee ₹57,400 hai aur MBA Self Finance ki annual fee ₹81,250 hai.",
       },
       {
         question: "mca fee",
         answer:
-          "MCA fee details are available on the KMCLU courses page.",
+          "KMCLU MCA ki annual fee ₹81,250 hai.",
+      },
+      {
+        question: "bba fee",
+        answer:
+          "KMCLU BBA ki annual fee ₹43,050 hai.",
+      },
+      {
+        question: "ba fee",
+        answer:
+          "KMCLU BA ki annual fee ₹12,050 se ₹14,850 ke beech hai.",
+      },
+      {
+        question: "bcom fee",
+        answer:
+          "KMCLU B.Com Regular ki annual fee ₹14,050 hai aur Self Finance ki ₹30,150 hai.",
       },
       {
         question: "btech admission",
@@ -74,7 +104,7 @@ mongoose
       {
         question: "hostel fee",
         answer:
-          "KMCLU provides hostel facilities for boys and girls. Hostel fee can be confirmed from the administration office.",
+          "KMCLU hostel fee can be confirmed from the administration office. Hostel facility is available for both boys and girls.",
       },
       {
         question: "hostel available",
@@ -89,7 +119,7 @@ mongoose
       {
         question: "library timing",
         answer:
-          "Library timing can be checked from the university website.",
+          "Library timing can be checked from the university website or administration office.",
       },
       {
         question: "scholarship",
