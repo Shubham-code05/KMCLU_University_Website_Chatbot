@@ -14,97 +14,97 @@ mongoose
       {
         question: "admission",
         answer:
-          "KMCLU admission forms are available on the official university website. 🔗 Admission Link: https://www.kmclu.ac.in/admission/",
+          "KMCLU admission forms are available on the official university website.",
       },
       {
         question: "exam",
         answer:
-          "KMCLU exam schedule is available in the Notice section of the website. 🔗 Notice Link: https://www.kmclu.ac.in/notice/",
+          "KMCLU exam schedule is available in the Notice section of the website.",
       },
       {
         question: "fee",
         answer:
-          "KMCLU fee structure is available in the Fee section. 🔗 Fee Link: https://www.kmclu.ac.in/",
+          "KMCLU fee structure is available in the Fee section.",
       },
       {
         question: "contact",
         answer:
-          "You can contact KMCLU at reg@kmclu.ac.in 🔗 Contact Link: https://www.kmclu.ac.in/contact-us/",
+          "You can contact KMCLU at reg@kmclu.ac.in",
       },
       {
         question: "contact number",
         answer:
-          "KMCLU Contact Number: +91-551-2205577 📞",
+          "KMCLU Contact Number: +91-551-2205577",
       },
       {
         question: "courses",
         answer:
-          "KMCLU offers BA, BCA, B.Tech, MBA, MCA and language courses. 🔗 Courses Link: https://www.kmclu.ac.in/courses/",
+          "KMCLU offers BA, BCA, B.Tech, MBA, MCA and language courses.",
       },
       {
         question: "bca fee",
         answer:
-          "BCA fee details are available on the KMCLU courses page. 🔗 Courses Link: https://www.kmclu.ac.in/courses/",
+          "BCA fee details are available on the KMCLU courses page.",
       },
       {
         question: "mba fee",
         answer:
-          "MBA fee details are available from the KMCLU courses page. 🔗 Courses Link: https://www.kmclu.ac.in/courses/",
+          "MBA fee details are available from the KMCLU courses page.",
       },
       {
         question: "mca fee",
         answer:
-          "MCA fee details are available on the KMCLU courses page. 🔗 Courses Link: https://www.kmclu.ac.in/courses/",
+          "MCA fee details are available on the KMCLU courses page.",
       },
       {
         question: "btech admission",
         answer:
-          "B.Tech admission is based on eligibility and university process. 🔗 Admission Link: https://www.kmclu.ac.in/admission/",
+          "B.Tech admission is based on eligibility and university process.",
       },
       {
         question: "mba admission",
         answer:
-          "MBA admission details are available here. 🔗 Admission Link: https://www.kmclu.ac.in/admission/",
+          "MBA admission details are available here.",
       },
       {
         question: "hostel",
         answer:
-          "KMCLU provides hostel facilities for boys and girls. 🔗 University Link: https://www.kmclu.ac.in/",
+          "KMCLU provides hostel facilities for boys and girls.",
       },
       {
         question: "hostel fee",
         answer:
-          "KMCLU provides hostel facilities for boys and girls. Hostel fee can be confirmed from the administration office. 🔗 University Link: https://www.kmclu.ac.in/",
+          "KMCLU provides hostel facilities for boys and girls. Hostel fee can be confirmed from the administration office.",
       },
       {
         question: "hostel available",
         answer:
-          "Yes, KMCLU provides hostel facilities for boys and girls. 🔗 University Link: https://www.kmclu.ac.in/",
+          "Yes, KMCLU provides hostel facilities for boys and girls.",
       },
       {
         question: "library",
         answer:
-          "The university has a central library with books, journals and digital resources. 🔗 University Link: https://www.kmclu.ac.in/",
+          "The university has a central library with books, journals and digital resources.",
       },
       {
         question: "library timing",
         answer:
-          "Library timing can be checked from the university website. 🔗 University Link: https://www.kmclu.ac.in/",
+          "Library timing can be checked from the university website.",
       },
       {
         question: "scholarship",
         answer:
-          "Scholarship details are available in the student welfare section. 🔗 University Link: https://www.kmclu.ac.in/",
+          "Scholarship details are available in the student welfare section.",
       },
       {
         question: "result",
         answer:
-          "KMCLU results and notices are available in the Notice section of the official website. 🔗 Notice Link: https://www.kmclu.ac.in/notice/",
+          "KMCLU results and notices are available in the Notice section of the official website.",
       },
       {
         question: "admit card",
         answer:
-          "KMCLU admit card and exam related notices are available in the Notice section. 🔗 Notice Link: https://www.kmclu.ac.in/notice/",
+          "KMCLU admit card and exam related notices are available in the Notice section.",
       }
     ]);
 
