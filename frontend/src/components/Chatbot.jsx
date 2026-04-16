@@ -44,13 +44,16 @@ export default function Chatbot() {
     setInput("");
 
     try {
-      const response = await fetch("https://kmclu-university-website-chatbot.onrender.com/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ message: messageToSend }),
-      });
+      const response = await fetch(
+        "https://kmclu-university-website-chatbot.onrender.com/chat",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ message: messageToSend }),
+        }
+      );
 
       const data = await response.json();
 
