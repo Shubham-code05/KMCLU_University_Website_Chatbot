@@ -1,13 +1,17 @@
 export default function Header({ clearChat }) {
   return (
-    <div className="chat-header">
-      <div className="header-text">
-        <h2>KMCLU Helpdesk Bot</h2>
-        <p>AI Powered University Assistant</p>
+    <div className="header">
+      <div className="header-left">
+        <div className="logo-placeholder">KM</div>
+
+        <div>
+          <h1>Khwaja Moinuddin Chishti Language University</h1>
+          <p>Official Student Helpdesk Portal</p>
+        </div>
       </div>
 
       <button className="clear-btn" onClick={clearChat}>
-        🗑
+        Clear Chat
       </button>
     </div>
   );
