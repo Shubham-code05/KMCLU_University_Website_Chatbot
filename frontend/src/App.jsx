@@ -2,7 +2,11 @@ import Chatbot from "./components/Chatbot";
 import "./App.css";
 
 function App() {
-  return <Chatbot />;
+  return (
+    <div>
+      <Chatbot />
+    </div>
+  );
 }
 
 export default App;
