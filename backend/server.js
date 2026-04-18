@@ -39,15 +39,15 @@ app.get("/", (req, res) => {
 // Chat Route
 app.post("/chat", async (req, res) => {
   try {
-    const message = req.body?.message;
+    const message = req.body?.message?.trim();
 
-    if (!message || message.trim() === "") {
+    if (!message) {
       return res.status(400).json({
         reply: "Please type something.",
       });
     }
 
-    const lowerMessage = message.toLowerCase().trim();
+    const lowerMessage = message.toLowerCase();
 
     // Greeting
     if (["hi", "hello", "hey", "hlo"].includes(lowerMessage)) {
@@ -57,7 +57,50 @@ app.post("/chat", async (req, res) => {
       });
     }
 
-    // Smart matching
+    // Static direct answers from KMCLU website
+    if (
+      lowerMessage.includes("full form") ||
+      lowerMessage.includes("kmclu ka full form")
+    ) {
+      return res.json({
+        reply:
+          "KMCLU ka full form Khwaja Moinuddin Chishti Language University, Lucknow hai.",
+      });
+    }
+
+    if (
+      lowerMessage.includes("vice chancellor") ||
+      lowerMessage.includes("vc kaun") ||
+      lowerMessage.includes("vice chancellor kaun hai")
+    ) {
+      return res.json({
+        reply: "KMCLU ke Vice Chancellor Prof. Ajay Taneja hain.",
+      });
+    }
+
+    if (
+      lowerMessage.includes("address") ||
+      lowerMessage.includes("location") ||
+      lowerMessage.includes("kaha hai")
+    ) {
+      return res.json({
+        reply:
+          "KMCLU Sitapur-Hardoi Bypass Road, Lucknow - 226013, Uttar Pradesh mein sthit hai.",
+      });
+    }
+
+    if (
+      lowerMessage.includes("contact") ||
+      lowerMessage.includes("phone") ||
+      lowerMessage.includes("helpline")
+    ) {
+      return res.json({
+        reply:
+          "KMCLU helpline number: +91-7007076127\nEmail: reg@kmclu.ac.in",
+      });
+    }
+
+    // Smart matching for MongoDB
     let searchText = lowerMessage;
 
     if (
@@ -96,41 +139,10 @@ app.post("/chat", async (req, res) => {
     ) {
       searchText = "ba fee";
     } else if (
-      lowerMessage.includes("all") &&
-      lowerMessage.includes("fee")
-    ) {
-      searchText = "all course fee";
-    } else if (
-      lowerMessage.includes("fee structure") ||
-      lowerMessage === "fee"
-    ) {
-      searchText = "fee structure";
-    } else if (
-      lowerMessage.includes("mba") &&
-      (lowerMessage.includes("admission") ||
-        lowerMessage.includes("apply"))
-    ) {
-      searchText = "mba admission";
-    } else if (
-      lowerMessage.includes("btech") &&
-      lowerMessage.includes("admission")
-    ) {
-      searchText = "btech admission";
-    } else if (
       lowerMessage.includes("hostel") &&
       lowerMessage.includes("fee")
     ) {
       searchText = "hostel fee";
-    } else if (
-      lowerMessage.includes("contact") &&
-      lowerMessage.includes("number")
-    ) {
-      searchText = "contact number";
-    } else if (
-      lowerMessage.includes("library") &&
-      lowerMessage.includes("timing")
-    ) {
-      searchText = "library timing";
     } else if (lowerMessage.includes("hostel")) {
       searchText = "hostel";
     } else if (lowerMessage.includes("library")) {
@@ -146,8 +158,6 @@ app.post("/chat", async (req, res) => {
       searchText = "admit card";
     } else if (lowerMessage.includes("course")) {
       searchText = "courses";
-    } else if (lowerMessage.includes("contact")) {
-      searchText = "contact";
     }
 
     // MongoDB Search
@@ -155,7 +165,6 @@ app.post("/chat", async (req, res) => {
       question: { $regex: searchText, $options: "i" },
     });
 
-    // If answer found in MongoDB
     if (result) {
       return res.json({
         reply: result.answer,
@@ -166,33 +175,50 @@ app.post("/chat", async (req, res) => {
     try {
       const completion = await client.chat.completions.create({
         model: "llama-3.3-70b-versatile",
+        temperature: 0.2,
         messages: [
           {
             role: "system",
             content: `
 You are the official KMCLU University Helpdesk Bot.
 
-KMCLU full form is Khwaja Moinuddin Chishti Language University, Lucknow.
+Use ONLY official KMCLU information.
 
-You must answer any question related to KMCLU University such as:
-- Full form
-- Location and address
-- Vice Chancellor
-- Courses and fees
-- Admission process
-- Eligibility
+KMCLU full form:
+Khwaja Moinuddin Chishti Language University, Lucknow
+
+Official address:
+Sitapur-Hardoi Bypass Road, Lucknow - 226013, Uttar Pradesh
+
+Vice Chancellor:
+Prof. Ajay Taneja
+
+Helpline:
++91-7007076127
+
+Registrar Email:
+reg@kmclu.ac.in
+
+Official Website:
+https://www.kmclu.ac.in/
+
+Available topics:
+- Admission
+- Courses
+- Fee Structure
 - Hostel
 - Scholarship
-- Exam and Result
+- Exam
+- Result
 - Library
-- Faculty
+- Contact
+- Vice Chancellor
 - Placement
-- Contact details
-- Campus information
+- Address
 
-Official Website: https://www.kmclu.ac.in/
+Answer in simple Hindi or Hinglish.
 
-If the question is not related to KMCLU University, reply only:
+If question is not related to KMCLU, reply only:
 "Please ask only KMCLU University related questions."
             `,
           },
@@ -203,28 +229,23 @@ If the question is not related to KMCLU University, reply only:
         ],
       });
 
-      const reply = completion.choices[0].message.content;
-
-      if (!reply || reply.trim() === "") {
-        return res.json({
-          reply:
-            "Sorry, I could not find information about that KMCLU query.",
-        });
-      }
-
-      return res.json({
-        reply,
-      });
-    } catch (groqError) {
-      console.log("❌ Groq Error:", groqError);
+      const reply = completion.choices[0]?.message?.content;
 
       return res.json({
         reply:
-          "Sorry, I am unable to answer right now. Please try again after some time.",
+          reply ||
+          "KMCLU ki official website par iski jaankari uplabdh nahi hai.",
+      });
+    } catch (groqError) {
+      console.log("❌ Groq Error:", groqError.message);
+
+      return res.json({
+        reply:
+          "KMCLU ki official website par iski jaankari uplabdh nahi hai.",
       });
     }
   } catch (error) {
-    console.log("❌ Server Error:", error);
+    console.log("❌ Server Error:", error.message);
 
     return res.status(500).json({
       reply: "Server Error. Please try again later.",
