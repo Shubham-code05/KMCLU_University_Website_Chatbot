@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const OpenAI = require("openai");
+const axios = require("axios");
+const cheerio = require("cheerio");
 require("dotenv").config();
 
 const UniversityData = require("./models/UniversityData");
@@ -29,7 +31,7 @@ const client = new OpenAI({
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err) => console.log("❌ MongoDB Error:", err));
+  .catch((err) => console.log("❌ MongoDB Error:", err.message));
 
 // Test Route
 app.get("/", (req, res) => {
@@ -53,11 +55,11 @@ app.post("/chat", async (req, res) => {
     if (["hi", "hello", "hey", "hlo"].includes(lowerMessage)) {
       return res.json({
         reply:
-          "👋 Welcome to KMCLU Student Helpdesk!\n\nYou can ask me about:\n• Admission\n• Courses\n• Fee Structure\n• Hostel\n• Scholarship\n• Exam\n• Result\n• Library\n• Contact Number\n• Vice Chancellor\n• Placement\n• Address",
+          "👋 Welcome to KMCLU Student Helpdesk!\n\nYou can ask me about:\n• Admission\n• Courses\n• Fee Structure\n• Hostel\n• Scholarship\n• Exam\n• Result\n• Library\n• Contact Number\n• Vice Chancellor\n• Placement\n• Address\n• Latest Notice",
       });
     }
 
-    // Static direct answers from KMCLU website
+    // Static Answers
     if (
       lowerMessage.includes("full form") ||
       lowerMessage.includes("kmclu ka full form")
@@ -96,11 +98,65 @@ app.post("/chat", async (req, res) => {
     ) {
       return res.json({
         reply:
-          "KMCLU helpline number: +91-7007076127\nEmail: reg@kmclu.ac.in",
+          "KMCLU Helpline Number: +91-7007076127\nEmail: reg@kmclu.ac.in",
       });
     }
 
-    // Smart matching for MongoDB
+    // Latest Notice
+    if (
+      lowerMessage.includes("latest notice") ||
+      lowerMessage.includes("new notice") ||
+      lowerMessage.includes("notice")
+    ) {
+      try {
+        const { data } = await axios.get(
+          "https://www.kmclu.ac.in/notice/",
+          {
+            headers: {
+              "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            },
+          }
+        );
+
+        const $ = cheerio.load(data);
+
+        const notices = [];
+
+        $("a").each((i, el) => {
+          const text = $(el).text().trim();
+
+          if (
+            text.length > 20 &&
+            !text.toLowerCase().includes("home") &&
+            !text.toLowerCase().includes("read more") &&
+            !text.toLowerCase().includes("click here") &&
+            !text.toLowerCase().includes("view all")
+          ) {
+            notices.push(text);
+          }
+        });
+
+        const latestNotice =
+          notices[0] || "Latest notice website par available hai.";
+
+        return res.json({
+          reply:
+            "📢 Latest KMCLU Notice:\n\n" +
+            latestNotice +
+            "\n\nWebsite: https://www.kmclu.ac.in/notice/",
+        });
+      } catch (err) {
+        console.log("❌ Notice Fetch Error:", err.message);
+
+        return res.json({
+          reply:
+            "Latest notice fetch nahi ho paaya.\nWebsite: https://www.kmclu.ac.in/notice/",
+        });
+      }
+    }
+
+    // Smart Matching for MongoDB
     let searchText = lowerMessage;
 
     if (
@@ -182,18 +238,18 @@ app.post("/chat", async (req, res) => {
             content: `
 You are the official KMCLU University Helpdesk Bot.
 
-Use ONLY official KMCLU information.
+Use only official KMCLU information.
 
-KMCLU full form:
+KMCLU Full Form:
 Khwaja Moinuddin Chishti Language University, Lucknow
 
-Official address:
+Official Address:
 Sitapur-Hardoi Bypass Road, Lucknow - 226013, Uttar Pradesh
 
 Vice Chancellor:
 Prof. Ajay Taneja
 
-Helpline:
+Helpline Number:
 +91-7007076127
 
 Registrar Email:
@@ -202,23 +258,12 @@ reg@kmclu.ac.in
 Official Website:
 https://www.kmclu.ac.in/
 
-Available topics:
-- Admission
-- Courses
-- Fee Structure
-- Hostel
-- Scholarship
-- Exam
-- Result
-- Library
-- Contact
-- Vice Chancellor
-- Placement
-- Address
+Answer in simple Hinglish.
 
-Answer in simple Hindi or Hinglish.
+If information is not available, say:
+"KMCLU ki official website par iski jaankari uplabdh nahi hai."
 
-If question is not related to KMCLU, reply only:
+If question is not related to KMCLU, say:
 "Please ask only KMCLU University related questions."
             `,
           },
@@ -229,7 +274,7 @@ If question is not related to KMCLU, reply only:
         ],
       });
 
-      const reply = completion.choices[0]?.message?.content;
+      const reply = completion.choices?.[0]?.message?.content?.trim();
 
       return res.json({
         reply:
