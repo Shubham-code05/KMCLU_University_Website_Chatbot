@@ -46,7 +46,15 @@ app.post("/chat", async (req, res) => {
 
     const lowerMessage = message.toLowerCase().trim();
 
-    // Smart matching
+    // Greetings
+    if (["hi", "hello", "hlo", "hey"].includes(lowerMessage)) {
+      return res.json({
+        reply:
+          "👋 Welcome to KMCLU Student Helpdesk!\n\nYou can ask me about:\n• Admission\n• Courses\n• BCA / MBA / MCA Fee\n• Hostel\n• Scholarship\n• Exam\n• Result\n• Admit Card\n• Contact Number",
+      });
+    }
+
+    // Smart keyword matching
     let searchText = lowerMessage;
 
     if (
@@ -54,6 +62,41 @@ app.post("/chat", async (req, res) => {
       (lowerMessage.includes("fee") || lowerMessage.includes("fees"))
     ) {
       searchText = "bca fee";
+    } else if (
+      lowerMessage.includes("btech") &&
+      (lowerMessage.includes("fee") || lowerMessage.includes("fees"))
+    ) {
+      searchText = "btech fee";
+    } else if (
+      lowerMessage.includes("mba") &&
+      (lowerMessage.includes("fee") || lowerMessage.includes("fees"))
+    ) {
+      searchText = "mba fee";
+    } else if (
+      lowerMessage.includes("mca") &&
+      (lowerMessage.includes("fee") || lowerMessage.includes("fees"))
+    ) {
+      searchText = "mca fee";
+    } else if (
+      lowerMessage.includes("bba") &&
+      (lowerMessage.includes("fee") || lowerMessage.includes("fees"))
+    ) {
+      searchText = "bba fee";
+    } else if (
+      lowerMessage.includes("ba") &&
+      (lowerMessage.includes("fee") || lowerMessage.includes("fees"))
+    ) {
+      searchText = "ba fee";
+    } else if (
+      lowerMessage.includes("bcom") &&
+      (lowerMessage.includes("fee") || lowerMessage.includes("fees"))
+    ) {
+      searchText = "bcom fee";
+    } else if (
+      lowerMessage.includes("all") &&
+      lowerMessage.includes("fee")
+    ) {
+      searchText = "all course fee";
     } else if (
       lowerMessage.includes("mba") &&
       (lowerMessage.includes("admission") || lowerMessage.includes("apply"))
@@ -83,7 +126,10 @@ app.post("/chat", async (req, res) => {
       searchText = "hostel";
     } else if (lowerMessage.includes("result")) {
       searchText = "result";
-    } else if (lowerMessage.includes("admit")) {
+    } else if (
+      lowerMessage.includes("admit") ||
+      lowerMessage.includes("hall ticket")
+    ) {
       searchText = "admit card";
     }
 
@@ -92,55 +138,61 @@ app.post("/chat", async (req, res) => {
       question: { $regex: searchText, $options: "i" },
     });
 
-    // Agar DB me answer mil gaya to wahi return karo
+    // If answer found in DB
     if (result) {
       return res.json({
         reply: result.answer,
       });
     }
 
-    // Greetings
-    if (["hi", "hello", "hlo", "hey"].includes(lowerMessage)) {
-      return res.json({
-        reply:
-          "👋 Welcome to KMCLU Helpdesk Bot.\n\nYou can ask me about:\n• Admission\n• Courses\n• Fee\n• Hostel\n• Scholarship\n• Exam\n• Library\n• Contact",
-      });
-    }
-
     // Gemini fallback
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
-    });
+    try {
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.0-flash",
+      });
 
-    const prompt = `
+      const prompt = `
 You are KMCLU University Helpdesk Bot.
 
 Answer ONLY questions related to KMCLU University.
 
 Official Website: https://www.kmclu.ac.in/
 
-If the question is not related to KMCLU, reply:
-"Please ask only KMCLU University related questions."
-
 Question: ${lowerMessage}
 `;
 
-    try {
       const response = await model.generateContent(prompt);
       const reply = response.response.text();
 
       return res.json({ reply });
-    } catch (err) {
+    } catch (geminiError) {
+      console.log("Gemini Error:", geminiError.message);
+
       return res.json({
-        reply:
-          "Sorry, AI service is not available right now. Please ask about Admission, Courses, Fee, Hostel, Exam or Contact.",
+        reply: `I understand you asked about "${message}".
+
+Please ask KMCLU-related questions such as:
+• Admission
+• Courses
+• BCA Fee
+• MBA Fee
+• MCA Fee
+• Hostel
+• Scholarship
+• Exam
+• Result
+• Admit Card
+• Contact Number
+
+For more details visit:
+https://www.kmclu.ac.in/`,
       });
     }
   } catch (error) {
     console.log("❌ Server Error:", error);
 
     return res.status(500).json({
-      reply: "Server Error",
+      reply: "Server Error. Please try again later.",
     });
   }
 });
