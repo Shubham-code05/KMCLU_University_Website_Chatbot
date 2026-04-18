@@ -1,9 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const OpenAI = require("openai");
 require("dotenv").config();
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 const UniversityData = require("./models/UniversityData");
 
 const app = express();
@@ -19,8 +19,11 @@ app.use(
 
 app.use(express.json());
 
-// Gemini Setup
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Groq Setup
+const client = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
+});
 
 // MongoDB Connect
 mongoose
@@ -50,7 +53,7 @@ app.post("/chat", async (req, res) => {
     if (["hi", "hello", "hey", "hlo"].includes(lowerMessage)) {
       return res.json({
         reply:
-          "👋 Welcome to KMCLU Student Helpdesk!\n\nYou can ask me about:\n• Admission\n• Courses\n• Fee Structure\n• Hostel\n• Scholarship\n• Exam\n• Result\n• Library\n• Contact Number",
+          "👋 Welcome to KMCLU Student Helpdesk!\n\nYou can ask me about:\n• Admission\n• Courses\n• Fee Structure\n• Hostel\n• Scholarship\n• Exam\n• Result\n• Library\n• Contact Number\n• Vice Chancellor\n• Placement\n• Address",
       });
     }
 
@@ -159,44 +162,48 @@ app.post("/chat", async (req, res) => {
       });
     }
 
-    // Gemini Fallback
+    // Groq Fallback
     try {
-      const model = genAI.getGenerativeModel({
-        model: "gemini-2.0-flash",
-      });
-
-      const prompt = `
+      const completion = await client.chat.completions.create({
+        model: "llama3-70b-8192",
+        messages: [
+          {
+            role: "system",
+            content: `
 You are the official KMCLU University Helpdesk Bot.
 
-KMCLU means Khwaja Moinuddin Chishti Language University, Lucknow.
+KMCLU full form is Khwaja Moinuddin Chishti Language University, Lucknow.
 
-You must answer ANY question related to KMCLU University, including:
+You must answer any question related to KMCLU University such as:
+- Full form
 - Location and address
+- Vice Chancellor
 - Courses and fees
 - Admission process
 - Eligibility
 - Hostel
 - Scholarship
-- Exam and result
+- Exam and Result
 - Library
 - Faculty
-- Vice Chancellor
 - Placement
 - Contact details
 - Campus information
 
 Official Website: https://www.kmclu.ac.in/
 
-If the question is related to KMCLU University, answer clearly in simple language.
-
 If the question is not related to KMCLU University, reply only:
 "Please ask only KMCLU University related questions."
+            `,
+          },
+          {
+            role: "user",
+            content: message,
+          },
+        ],
+      });
 
-User Question: ${message}
-`;
-
-      const response = await model.generateContent(prompt);
-      const reply = response.response.text();
+      const reply = completion.choices[0].message.content;
 
       if (!reply || reply.trim() === "") {
         return res.json({
@@ -208,8 +215,8 @@ User Question: ${message}
       return res.json({
         reply,
       });
-    } catch (geminiError) {
-      console.log("❌ Gemini Error:", geminiError);
+    } catch (groqError) {
+      console.log("❌ Groq Error:", groqError);
 
       return res.json({
         reply:
