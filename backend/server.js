@@ -19,7 +19,7 @@ app.use(
 
 app.use(express.json());
 
-// Gemini
+// Gemini Setup
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // MongoDB Connect
@@ -46,15 +46,15 @@ app.post("/chat", async (req, res) => {
 
     const lowerMessage = message.toLowerCase().trim();
 
-    // Greetings
-    if (["hi", "hello", "hlo", "hey"].includes(lowerMessage)) {
+    // Greeting
+    if (["hi", "hello", "hey", "hlo"].includes(lowerMessage)) {
       return res.json({
         reply:
-          "👋 Welcome to KMCLU Student Helpdesk!\n\nYou can ask me about:\n• Admission\n• Courses\n• BCA / MBA / MCA Fee\n• Hostel\n• Scholarship\n• Exam\n• Result\n• Admit Card\n• Contact Number",
+          "👋 Welcome to KMCLU Student Helpdesk!\n\nYou can ask me about:\n• Admission\n• Courses\n• Fee Structure\n• Hostel\n• Scholarship\n• Exam\n• Result\n• Library\n• Contact Number",
       });
     }
 
-    // Smart keyword matching
+    // Smart matching
     let searchText = lowerMessage;
 
     if (
@@ -83,23 +83,29 @@ app.post("/chat", async (req, res) => {
     ) {
       searchText = "bba fee";
     } else if (
-      lowerMessage.includes("ba") &&
-      (lowerMessage.includes("fee") || lowerMessage.includes("fees"))
-    ) {
-      searchText = "ba fee";
-    } else if (
       lowerMessage.includes("bcom") &&
       (lowerMessage.includes("fee") || lowerMessage.includes("fees"))
     ) {
       searchText = "bcom fee";
+    } else if (
+      lowerMessage.includes("ba") &&
+      (lowerMessage.includes("fee") || lowerMessage.includes("fees"))
+    ) {
+      searchText = "ba fee";
     } else if (
       lowerMessage.includes("all") &&
       lowerMessage.includes("fee")
     ) {
       searchText = "all course fee";
     } else if (
+      lowerMessage.includes("fee structure") ||
+      lowerMessage === "fee"
+    ) {
+      searchText = "fee structure";
+    } else if (
       lowerMessage.includes("mba") &&
-      (lowerMessage.includes("admission") || lowerMessage.includes("apply"))
+      (lowerMessage.includes("admission") ||
+        lowerMessage.includes("apply"))
     ) {
       searchText = "mba admission";
     } else if (
@@ -124,6 +130,10 @@ app.post("/chat", async (req, res) => {
       searchText = "library timing";
     } else if (lowerMessage.includes("hostel")) {
       searchText = "hostel";
+    } else if (lowerMessage.includes("library")) {
+      searchText = "library";
+    } else if (lowerMessage.includes("scholarship")) {
+      searchText = "scholarship";
     } else if (lowerMessage.includes("result")) {
       searchText = "result";
     } else if (
@@ -131,6 +141,10 @@ app.post("/chat", async (req, res) => {
       lowerMessage.includes("hall ticket")
     ) {
       searchText = "admit card";
+    } else if (lowerMessage.includes("course")) {
+      searchText = "courses";
+    } else if (lowerMessage.includes("contact")) {
+      searchText = "contact";
     }
 
     // MongoDB Search
@@ -138,54 +152,68 @@ app.post("/chat", async (req, res) => {
       question: { $regex: searchText, $options: "i" },
     });
 
-    // If answer found in DB
+    // If answer found in MongoDB
     if (result) {
       return res.json({
         reply: result.answer,
       });
     }
 
-    // Gemini fallback
+    // Gemini Fallback
     try {
       const model = genAI.getGenerativeModel({
         model: "gemini-2.0-flash",
       });
 
       const prompt = `
-You are KMCLU University Helpdesk Bot.
+You are the official KMCLU University Helpdesk Bot.
 
-Answer ONLY questions related to KMCLU University.
+KMCLU means Khwaja Moinuddin Chishti Language University, Lucknow.
+
+You must answer ANY question related to KMCLU University, including:
+- Location and address
+- Courses and fees
+- Admission process
+- Eligibility
+- Hostel
+- Scholarship
+- Exam and result
+- Library
+- Faculty
+- Vice Chancellor
+- Placement
+- Contact details
+- Campus information
 
 Official Website: https://www.kmclu.ac.in/
 
-Question: ${lowerMessage}
+If the question is related to KMCLU University, answer clearly in simple language.
+
+If the question is not related to KMCLU University, reply only:
+"Please ask only KMCLU University related questions."
+
+User Question: ${message}
 `;
 
       const response = await model.generateContent(prompt);
       const reply = response.response.text();
 
-      return res.json({ reply });
-    } catch (geminiError) {
-      console.log("Gemini Error:", geminiError.message);
+      if (!reply || reply.trim() === "") {
+        return res.json({
+          reply:
+            "Sorry, I could not find information about that KMCLU query.",
+        });
+      }
 
       return res.json({
-        reply: `I understand you asked about "${message}".
+        reply,
+      });
+    } catch (geminiError) {
+      console.log("❌ Gemini Error:", geminiError);
 
-Please ask KMCLU-related questions such as:
-• Admission
-• Courses
-• BCA Fee
-• MBA Fee
-• MCA Fee
-• Hostel
-• Scholarship
-• Exam
-• Result
-• Admit Card
-• Contact Number
-
-For more details visit:
-https://www.kmclu.ac.in/`,
+      return res.json({
+        reply:
+          "Sorry, I am unable to answer right now. Please try again after some time.",
       });
     }
   } catch (error) {
