@@ -102,22 +102,22 @@ app.post("/chat", async (req, res) => {
       });
     }
 
-    // Latest Notice
+    // Latest Notice from Website
     if (
       lowerMessage.includes("latest notice") ||
       lowerMessage.includes("new notice") ||
       lowerMessage.includes("notice")
     ) {
       try {
-        const { data } = await axios.get(
-          "https://www.kmclu.ac.in/notice/",
-          {
-            headers: {
-              "User-Agent":
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            },
-          }
-        );
+        const { data } = await axios.get("https://www.kmclu.ac.in", {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            Accept:
+              "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+          },
+          timeout: 10000,
+        });
 
         const $ = cheerio.load(data);
 
@@ -129,29 +129,29 @@ app.post("/chat", async (req, res) => {
           if (
             text.length > 20 &&
             !text.toLowerCase().includes("home") &&
-            !text.toLowerCase().includes("read more") &&
-            !text.toLowerCase().includes("click here") &&
-            !text.toLowerCase().includes("view all")
+            !text.toLowerCase().includes("admission") &&
+            !text.toLowerCase().includes("contact") &&
+            !text.toLowerCase().includes("course") &&
+            !text.toLowerCase().includes("library") &&
+            !text.toLowerCase().includes("hostel") &&
+            !text.toLowerCase().includes("read more")
           ) {
             notices.push(text);
           }
         });
 
-        const latestNotice =
-          notices[0] || "Latest notice website par available hai.";
-
         return res.json({
           reply:
             "📢 Latest KMCLU Notice:\n\n" +
-            latestNotice +
-            "\n\nWebsite: https://www.kmclu.ac.in/notice/",
+            (notices[0] || "Website par latest notice available hai.") +
+            "\n\nWebsite: https://www.kmclu.ac.in/",
         });
       } catch (err) {
         console.log("❌ Notice Fetch Error:", err.message);
 
         return res.json({
           reply:
-            "Latest notice fetch nahi ho paaya.\nWebsite: https://www.kmclu.ac.in/notice/",
+            "Latest notice fetch nahi ho paaya.\n\nWebsite: https://www.kmclu.ac.in/",
         });
       }
     }
