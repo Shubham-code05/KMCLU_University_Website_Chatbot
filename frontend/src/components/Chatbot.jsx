@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "./Header";
 import QuickButtons from "./QuickButtons";
 import MessageList from "./MessageList";
@@ -14,7 +14,54 @@ export default function Chatbot() {
 
   const [input, setInput] = useState("");
 
-  const clearChat = () => {
+  // Load previous chat history
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const response = await fetch(
+          "https://kmclu-university-website-chatbot.onrender.com/history"
+        );
+
+        const data = await response.json();
+
+        if (data.length > 0) {
+          const formattedMessages = [];
+
+          data.forEach((chat) => {
+            formattedMessages.push({
+              text: chat.userMessage,
+              sender: "user",
+            });
+
+            formattedMessages.push({
+              text: chat.botReply,
+              sender: "bot",
+            });
+          });
+
+          setMessages(formattedMessages);
+        }
+      } catch (error) {
+        console.log("History load failed");
+      }
+    };
+
+    fetchHistory();
+  }, []);
+
+  // Clear chat + history
+  const clearChat = async () => {
+    try {
+      await fetch(
+        "https://kmclu-university-website-chatbot.onrender.com/history",
+        {
+          method: "DELETE",
+        }
+      );
+    } catch (error) {
+      console.log("History delete failed");
+    }
+
     setMessages([
       {
         text: "👋 Welcome to KMCLU Helpdesk Bot",
@@ -23,6 +70,7 @@ export default function Chatbot() {
     ]);
   };
 
+  // Send Message
   const sendMessage = async (customMessage) => {
     const messageToSend = customMessage || input;
 
@@ -51,7 +99,9 @@ export default function Chatbot() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ message: messageToSend }),
+          body: JSON.stringify({
+            message: messageToSend,
+          }),
         }
       );
 
@@ -76,7 +126,7 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="chatbot-container">
+    <div className="chatbot">
       <Header clearChat={clearChat} />
 
       <QuickButtons sendMessage={sendMessage} />

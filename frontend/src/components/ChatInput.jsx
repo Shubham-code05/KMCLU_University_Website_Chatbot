@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { HiMiniMicrophone, HiPaperAirplane } from "react-icons/hi2";
 
 export default function ChatInput({ input, setInput, sendMessage }) {
   const recognitionRef = useRef(null);
@@ -47,11 +48,11 @@ export default function ChatInput({ input, setInput, sendMessage }) {
       />
 
       <button className="mic-btn" onClick={startVoice}>
-        🎤
+        <HiMiniMicrophone size={24} />
       </button>
 
       <button className="send-btn" onClick={() => sendMessage()}>
-        ➤
+        <HiPaperAirplane size={22} />
       </button>
     </div>
   );

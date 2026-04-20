@@ -15,7 +15,7 @@ const app = express();
 app.use(
   cors({
     origin: "*",
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "DELETE"],
     allowedHeaders: ["Content-Type"],
   })
 );
@@ -39,6 +39,40 @@ app.get("/", (req, res) => {
   res.send("KMCLU Chatbot Backend Running...");
 });
 
+// Chat History Route
+app.get("/history", async (req, res) => {
+  try {
+    const chats = await ChatHistory.find()
+      .sort({ createdAt: 1 })
+      .limit(100);
+
+    res.json(chats);
+  } catch (err) {
+    console.log("❌ History Fetch Error:", err.message);
+
+    res.status(500).json({
+      error: "History fetch failed",
+    });
+  }
+});
+
+// Clear History Route
+app.delete("/history", async (req, res) => {
+  try {
+    await ChatHistory.deleteMany({});
+
+    res.json({
+      message: "History deleted successfully",
+    });
+  } catch (err) {
+    console.log("❌ History Delete Error:", err.message);
+
+    res.status(500).json({
+      error: "History delete failed",
+    });
+  }
+});
+
 // Chat Route
 app.post("/chat", async (req, res) => {
   try {
@@ -52,7 +86,7 @@ app.post("/chat", async (req, res) => {
 
     const lowerMessage = message.toLowerCase();
 
-    // Helper function for saving chat
+    // Common reply + save function
     const sendReply = async (replyText) => {
       try {
         await ChatHistory.create({
@@ -115,14 +149,14 @@ app.post("/chat", async (req, res) => {
       );
     }
 
-    // Latest Notice Fetch
+    // Latest Notice
     if (
       lowerMessage.includes("latest notice") ||
       lowerMessage.includes("new notice") ||
       lowerMessage === "notice"
     ) {
       try {
-        const { data } = await axios.get("https://www.kmclu.ac.in", {
+        const { data } = await axios.get("https://www.kmclu.ac.in/", {
           headers: {
             "User-Agent":
               "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -141,7 +175,8 @@ app.post("/chat", async (req, res) => {
             !text.toLowerCase().includes("home") &&
             !text.toLowerCase().includes("read more") &&
             !text.toLowerCase().includes("contact") &&
-            !text.toLowerCase().includes("admission")
+            !text.toLowerCase().includes("admission") &&
+            !notices.includes(text)
           ) {
             notices.push(text);
           }
@@ -207,7 +242,7 @@ app.post("/chat", async (req, res) => {
       searchText = "courses";
     }
 
-    // MongoDB Search
+    // Search in UniversityData
     const result = await UniversityData.findOne({
       question: { $regex: searchText, $options: "i" },
     });
@@ -249,10 +284,10 @@ https://www.kmclu.ac.in/
 
 Answer in simple Hinglish.
 
-If information is not available, say:
+If information is not available, say exactly:
 "KMCLU ki official website par iski jaankari uplabdh nahi hai."
 
-If question is not related to KMCLU, say:
+If question is not related to KMCLU, say exactly:
 "Please ask only KMCLU University related questions."
             `,
           },
