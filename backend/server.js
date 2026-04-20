@@ -7,6 +7,7 @@ const cheerio = require("cheerio");
 require("dotenv").config();
 
 const UniversityData = require("./models/UniversityData");
+const ChatHistory = require("./models/ChatHistory");
 
 const app = express();
 
@@ -51,12 +52,27 @@ app.post("/chat", async (req, res) => {
 
     const lowerMessage = message.toLowerCase();
 
+    // Helper function for saving chat
+    const sendReply = async (replyText) => {
+      try {
+        await ChatHistory.create({
+          userMessage: message,
+          botReply: replyText,
+        });
+      } catch (err) {
+        console.log("❌ Chat History Save Error:", err.message);
+      }
+
+      return res.json({
+        reply: replyText,
+      });
+    };
+
     // Greeting
     if (["hi", "hello", "hey", "hlo"].includes(lowerMessage)) {
-      return res.json({
-        reply:
-          "👋 Welcome to KMCLU Student Helpdesk!\n\nYou can ask me about:\n• Admission\n• Courses\n• Fee Structure\n• Hostel\n• Scholarship\n• Exam\n• Result\n• Library\n• Contact Number\n• Vice Chancellor\n• Placement\n• Address\n• Latest Notice",
-      });
+      return sendReply(
+        "👋 Welcome to KMCLU Student Helpdesk!\n\nYou can ask me about:\n• Admission\n• Courses\n• Fee Structure\n• Hostel\n• Scholarship\n• Exam\n• Result\n• Library\n• Contact Number\n• Vice Chancellor\n• Placement\n• Address\n• Latest Notice"
+      );
     }
 
     // Static Answers
@@ -64,10 +80,9 @@ app.post("/chat", async (req, res) => {
       lowerMessage.includes("full form") ||
       lowerMessage.includes("kmclu ka full form")
     ) {
-      return res.json({
-        reply:
-          "KMCLU ka full form Khwaja Moinuddin Chishti Language University, Lucknow hai.",
-      });
+      return sendReply(
+        "KMCLU ka full form Khwaja Moinuddin Chishti Language University, Lucknow hai."
+      );
     }
 
     if (
@@ -75,9 +90,9 @@ app.post("/chat", async (req, res) => {
       lowerMessage.includes("vc kaun") ||
       lowerMessage.includes("vice chancellor kaun hai")
     ) {
-      return res.json({
-        reply: "KMCLU ke Vice Chancellor Prof. Ajay Taneja hain.",
-      });
+      return sendReply(
+        "KMCLU ke Vice Chancellor Prof. Ajay Taneja hain."
+      );
     }
 
     if (
@@ -85,10 +100,9 @@ app.post("/chat", async (req, res) => {
       lowerMessage.includes("location") ||
       lowerMessage.includes("kaha hai")
     ) {
-      return res.json({
-        reply:
-          "KMCLU Sitapur-Hardoi Bypass Road, Lucknow - 226013, Uttar Pradesh mein sthit hai.",
-      });
+      return sendReply(
+        "KMCLU Sitapur-Hardoi Bypass Road, Lucknow - 226013, Uttar Pradesh mein sthit hai."
+      );
     }
 
     if (
@@ -96,67 +110,59 @@ app.post("/chat", async (req, res) => {
       lowerMessage.includes("phone") ||
       lowerMessage.includes("helpline")
     ) {
-      return res.json({
-        reply:
-          "KMCLU Helpline Number: +91-7007076127\nEmail: reg@kmclu.ac.in",
-      });
+      return sendReply(
+        "KMCLU Helpline Number: +91-7007076127\nEmail: reg@kmclu.ac.in"
+      );
     }
 
-    // Latest Notice from Website
+    // Latest Notice Fetch
     if (
       lowerMessage.includes("latest notice") ||
       lowerMessage.includes("new notice") ||
-      lowerMessage.includes("notice")
+      lowerMessage === "notice"
     ) {
       try {
         const { data } = await axios.get("https://www.kmclu.ac.in", {
           headers: {
             "User-Agent":
               "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            Accept:
-              "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
           },
           timeout: 10000,
         });
 
         const $ = cheerio.load(data);
-
         const notices = [];
 
         $("a").each((i, el) => {
           const text = $(el).text().trim();
 
           if (
-            text.length > 20 &&
+            text.length > 25 &&
             !text.toLowerCase().includes("home") &&
-            !text.toLowerCase().includes("admission") &&
+            !text.toLowerCase().includes("read more") &&
             !text.toLowerCase().includes("contact") &&
-            !text.toLowerCase().includes("course") &&
-            !text.toLowerCase().includes("library") &&
-            !text.toLowerCase().includes("hostel") &&
-            !text.toLowerCase().includes("read more")
+            !text.toLowerCase().includes("admission")
           ) {
             notices.push(text);
           }
         });
 
-        return res.json({
-          reply:
-            "📢 Latest KMCLU Notice:\n\n" +
-            (notices[0] || "Website par latest notice available hai.") +
-            "\n\nWebsite: https://www.kmclu.ac.in/",
-        });
+        const latestNotice =
+          notices[0] || "Website par latest notice available hai.";
+
+        return sendReply(
+          `📢 Latest KMCLU Notice:\n\n${latestNotice}\n\nWebsite: https://www.kmclu.ac.in/`
+        );
       } catch (err) {
         console.log("❌ Notice Fetch Error:", err.message);
 
-        return res.json({
-          reply:
-            "Latest notice fetch nahi ho paaya.\n\nWebsite: https://www.kmclu.ac.in/",
-        });
+        return sendReply(
+          "Latest notice fetch nahi ho paaya.\n\nWebsite: https://www.kmclu.ac.in/"
+        );
       }
     }
 
-    // Smart Matching for MongoDB
+    // Smart Search Text
     let searchText = lowerMessage;
 
     if (
@@ -179,21 +185,6 @@ app.post("/chat", async (req, res) => {
       (lowerMessage.includes("fee") || lowerMessage.includes("fees"))
     ) {
       searchText = "mca fee";
-    } else if (
-      lowerMessage.includes("bba") &&
-      (lowerMessage.includes("fee") || lowerMessage.includes("fees"))
-    ) {
-      searchText = "bba fee";
-    } else if (
-      lowerMessage.includes("bcom") &&
-      (lowerMessage.includes("fee") || lowerMessage.includes("fees"))
-    ) {
-      searchText = "bcom fee";
-    } else if (
-      lowerMessage.includes("ba") &&
-      (lowerMessage.includes("fee") || lowerMessage.includes("fees"))
-    ) {
-      searchText = "ba fee";
     } else if (
       lowerMessage.includes("hostel") &&
       lowerMessage.includes("fee")
@@ -222,9 +213,7 @@ app.post("/chat", async (req, res) => {
     });
 
     if (result) {
-      return res.json({
-        reply: result.answer,
-      });
+      return sendReply(result.answer);
     }
 
     // Groq Fallback
@@ -274,20 +263,17 @@ If question is not related to KMCLU, say:
         ],
       });
 
-      const reply = completion.choices?.[0]?.message?.content?.trim();
+      const reply =
+        completion.choices?.[0]?.message?.content?.trim() ||
+        "KMCLU ki official website par iski jaankari uplabdh nahi hai.";
 
-      return res.json({
-        reply:
-          reply ||
-          "KMCLU ki official website par iski jaankari uplabdh nahi hai.",
-      });
+      return sendReply(reply);
     } catch (groqError) {
       console.log("❌ Groq Error:", groqError.message);
 
-      return res.json({
-        reply:
-          "KMCLU ki official website par iski jaankari uplabdh nahi hai.",
-      });
+      return sendReply(
+        "KMCLU ki official website par iski jaankari uplabdh nahi hai."
+      );
     }
   } catch (error) {
     console.log("❌ Server Error:", error.message);

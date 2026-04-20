@@ -1,9 +1,19 @@
+import { useState } from "react";
 import Chatbot from "./components/Chatbot";
 import "./App.css";
 
 function App() {
+  const [darkMode, setDarkMode] = useState(false);
+
   return (
-    <div>
+    <div className={darkMode ? "app dark" : "app"}>
+      <button
+        className="theme-toggle"
+        onClick={() => setDarkMode(!darkMode)}
+      >
+        {darkMode ? "☀️ Light" : "🌙 Dark"}
+      </button>
+
       <Chatbot />
     </div>
   );
