@@ -11,6 +11,9 @@ const ChatHistory = require("./models/ChatHistory");
 
 const app = express();
 
+// ✅ ADD THIS LINE (chatbot.js serve )
+app.use(express.static(__dirname));
+
 // Middleware
 app.use(
   cors({
