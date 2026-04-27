@@ -2,8 +2,15 @@ export default function Header({ clearChat }) {
   return (
     <div className="header">
       <div className="header-left">
-        <div className="logo-placeholder">KMCLU</div>
+        
+        {/* ✅ Logo Image */}
+        <img 
+          src="/logo.png" 
+          alt="KMCLU Logo" 
+          className="logo-img"
+        />
 
+        {/* ✅ Text */}
         <div className="header-text">
           <h1>Khwaja Moinuddin Chishti Language University</h1>
 
@@ -15,6 +22,7 @@ export default function Header({ clearChat }) {
         </div>
       </div>
 
+      {/* ✅ Clear Button */}
       <button className="clear-btn" onClick={clearChat}>
         Clear Chat
       </button>
